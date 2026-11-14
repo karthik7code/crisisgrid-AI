@@ -1,0 +1,190 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Default-Deny Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Reusable Hardened Primitives
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidNumber(val) {
+      return (val is int || val is float) && val >= 0 && val <= 10000;
+    }
+
+    // Validation Blueprint for SimulationRecord
+    function isValidSimulationRecord(data) {
+      return data.keys().hasAll([
+        'ownerId',
+        'scenario',
+        'supply',
+        'totalDemand',
+        'safe',
+        'statusMessage',
+        'hospitalAllocated',
+        'waterAllocated',
+        'emergencyAllocated',
+        'telecomAllocated',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerId',
+        'scenario',
+        'supply',
+        'totalDemand',
+        'safe',
+        'statusMessage',
+        'hospitalAllocated',
+        'waterAllocated',
+        'emergencyAllocated',
+        'telecomAllocated',
+        'notes',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.ownerId is string &&
+      data.ownerId.size() >= 1 &&
+      data.ownerId.size() <= 128 &&
+      data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.ownerId == request.auth.uid &&
+      data.scenario is string &&
+      data.scenario.size() >= 1 &&
+      data.scenario.size() <= 64 &&
+      isValidNumber(data.supply) &&
+      isValidNumber(data.totalDemand) &&
+      data.safe is bool &&
+      data.statusMessage is string &&
+      data.statusMessage.size() >= 1 &&
+      data.statusMessage.size() <= 160 &&
+      isValidNumber(data.hospitalAllocated) &&
+      isValidNumber(data.waterAllocated) &&
+      isValidNumber(data.emergencyAllocated) &&
+      isValidNumber(data.telecomAllocated) &&
+      (!('notes' in data) || (data.notes is string && data.notes.size() <= 300)) &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    // Validation Blueprint for OperatorProfile
+    function isValidOperatorProfile(data) {
+      return data.keys().hasAll([
+        'ownerId',
+        'displayName',
+        'organization',
+        'sectorClearance',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerId',
+        'displayName',
+        'organization',
+        'sectorClearance',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.ownerId is string &&
+      data.ownerId.size() >= 1 &&
+      data.ownerId.size() <= 128 &&
+      data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.ownerId == request.auth.uid &&
+      data.displayName is string &&
+      data.displayName.size() >= 1 &&
+      data.displayName.size() <= 80 &&
+      data.organization is string &&
+      data.organization.size() >= 1 &&
+      data.organization.size() <= 80 &&
+      data.sectorClearance is string &&
+      data.sectorClearance.size() >= 1 &&
+      data.sectorClearance.size() <= 40 &&
+      data.sectorClearance in [
+        'Grid Commander',
+        'Hospital Liaison',
+        'Water Operations',
+        'Emergency Dispatch',
+        'Telecom Engineer'
+      ] &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    // Collection: /simulations/{simulationId}
+    match /simulations/{simulationId} {
+      allow get: if isSignedIn() && isValidId(simulationId) && existing().ownerId == request.auth.uid;
+
+      allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+
+      allow create: if isSignedIn() &&
+        isValidId(simulationId) &&
+        isValidSimulationRecord(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+
+      allow update: if isSignedIn() &&
+        isValidId(simulationId) &&
+        isValidSimulationRecord(incoming()) &&
+        existing().ownerId == request.auth.uid &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['notes', 'updatedAt']);
+
+      allow delete: if isSignedIn() &&
+        isValidId(simulationId) &&
+        existing().ownerId == request.auth.uid;
+    }
+
+    // Collection: /operators/{operatorId}
+    match /operators/{operatorId} {
+      allow get: if isSignedIn() &&
+        isValidId(operatorId) &&
+        operatorId == request.auth.uid &&
+        (resource == null || existing().ownerId == request.auth.uid);
+
+      allow create: if isSignedIn() &&
+        isValidId(operatorId) &&
+        operatorId == request.auth.uid &&
+        isValidOperatorProfile(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+
+      allow update: if isSignedIn() &&
+        isValidId(operatorId) &&
+        operatorId == request.auth.uid &&
+        isValidOperatorProfile(incoming()) &&
+        existing().ownerId == request.auth.uid &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'displayName',
+          'organization',
+          'sectorClearance',
+          'updatedAt'
+        ]);
+
+      allow delete: if isSignedIn() &&
+        isValidId(operatorId) &&
+        operatorId == request.auth.uid &&
+        existing().ownerId == request.auth.uid;
+    }
+  }
+}

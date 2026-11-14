@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="cg-bg" x1="6" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#082f49" />
+      <stop offset="55%" stop-color="#090d16" />
+      <stop offset="100%" stop-color="#022c22" />
+    </linearGradient>
+    <linearGradient id="cg-rim" x1="8" y1="4" x2="56" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#67e8f9" />
+      <stop offset="50%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+    <linearGradient id="cg-bolt" x1="24" y1="14" x2="40" y2="50" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="45%" stop-color="#67e8f9" />
+      <stop offset="100%" stop-color="#22d3ee" />
+    </linearGradient>
+  </defs>
+
+  <!-- Outer Hexagonal Substation Shield -->
+  <polygon
+    points="32,4 56,17 56,47 32,60 8,47 8,17"
+    fill="url(#cg-bg)"
+    stroke="url(#cg-rim)"
+    stroke-width="2.5"
+    stroke-linejoin="round"
+  />
+
+  <!-- Inner Precision Grid Ring -->
+  <polygon
+    points="32,11 49,20.5 49,43.5 32,53 15,43.5 15,20.5"
+    fill="none"
+    stroke="#22d3ee"
+    stroke-opacity="0.28"
+    stroke-width="1.2"
+    stroke-dasharray="3 2"
+  />
+
+  <!-- 4 Critical Infrastructure Feeder Traces -->
+  <g stroke="#22d3ee" stroke-opacity="0.55" stroke-width="1.5" stroke-linecap="round">
+    <line x1="16" y1="21" x2="26" y2="27" />
+    <line x1="48" y1="21" x2="38" y2="27" />
+    <line x1="16" y1="43" x2="26" y2="37" />
+    <line x1="48" y1="43" x2="38" y2="37" />
+  </g>
+
+  <!-- 4 Critical Sector Nodes (Hospital, Water, Emergency, Telecom) -->
+  <circle cx="16" cy="21" r="2.7" fill="#38bdf8" stroke="#090d16" stroke-width="1" />
+  <circle cx="48" cy="21" r="2.7" fill="#10b981" stroke="#090d16" stroke-width="1" />
+  <circle cx="16" cy="43" r="2.7" fill="#22d3ee" stroke="#090d16" stroke-width="1" />
+  <circle cx="48" cy="43" r="2.7" fill="#34d399" stroke="#090d16" stroke-width="1" />
+
+  <!-- Central High-Voltage Dispatch Bolt -->
+  <path
+    d="M35.5 15L21.5 34H31.5L28.5 49L42.5 30H32.5L35.5 15Z"
+    fill="url(#cg-bolt)"
+    stroke="#083344"
+    stroke-width="1"
+    stroke-linejoin="round"
+  />
+</svg>
