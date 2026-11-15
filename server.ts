@@ -885,7 +885,12 @@ async function startServer() {
     res.json({ files: contents });
   });
 
-  if (process.env.NODE_ENV !== 'production') {
+  const isProduction =
+    process.env.NODE_ENV === 'production' ||
+    (process.env.NODE_ENV !== 'development' &&
+      fs.existsSync(path.join(__dirname, 'dist', 'index.html')));
+
+  if (!isProduction) {
     const vite = await createViteServer({
       server: { middlewareMode: true, allowedHosts: true },
       appType: 'spa',
